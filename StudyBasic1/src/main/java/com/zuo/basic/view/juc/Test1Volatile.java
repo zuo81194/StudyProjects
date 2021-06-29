@@ -107,7 +107,8 @@ class MyData2 {//MyData2.java --> MyData2.class --> JVM字节码
 /**
  * done 5~7课程验证volatile特性二：不保证原子性
  * 为什么number++在多线程的情况下会出现这种现象
- * 原理：由于number++底层的操作是由三步完成的（1.获得初始值，2.加1操作，3.把累加的值写回），多线程情况下可能会被加塞，值改变了也没来得及通知子线程，出现丢失写值的情况
+ * 原理：由于number++底层的操作是由三步完成的（1.获得初始值，2.加1操作，3.把累加的值写回），
+ * 多线程情况下可能会被加塞，值改变了也没来得及通知子线程，出现丢失写值的情况
  * 解决方案：1.加sync
  * 2.使用juc下的AtomicInteger（底层原理：CAS-->compare and swap）
  */
@@ -140,5 +141,48 @@ class Test3Volatile {
 }
 
 /**
- * todo volatile指令重排案例1、2
+ * done 8~9 volatile指令重排案例1、2
+ */
+class Test4Volatile {
+    public void test1() {
+        int i = 5;
+        int j = 4;
+        i = i + 5;
+        j = i * 4;
+        //以上可能发生指令重排
+    }
+}
+
+/**
+ * 多线程多线程情况下，线程交替执行可能导致变量乱序执行
+ */
+class ReSortDemo {
+    int a = 0;
+    boolean flag = false;
+
+    public void method01() {
+        a = 1;
+        flag = true;//
+    }
+
+    public void method02() {
+        if (flag) {
+            a = a + 5;
+            System.out.println("********retValue: " + a);
+        }
+    }
+
+    public static void main(String[] args) {
+        ReSortDemo demo = new ReSortDemo();
+        new Thread(demo::method02, "name2");
+        new Thread(demo::method01, "name1");
+
+    }
+}
+
+/**
+ * todo 第10课：单例模式在多线程情况下可能存在的安全问题
+ * todo 第11课：单例模式volatile优化
+ * todo 第12课：CAS是什么
+ * todo 第13~14课：CAS底层原理
  */
