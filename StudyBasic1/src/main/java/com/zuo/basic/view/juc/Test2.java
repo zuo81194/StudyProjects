@@ -5,6 +5,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -175,7 +176,7 @@ class T1 {
 }
 
 /**
- * done 26:java锁之可重入锁和递归锁理论知识
+ * done 26~27:java锁之可重入锁和递归锁理论知识
  * 可重入锁又名递归锁：线程可进入任何一个他已经拥有锁的所同步着的代码块，外层获取锁后，内层的锁自动获取
  * ReentrantLock、Synchronized就是典型的可重入锁
  * 重入锁：避免死锁
@@ -255,5 +256,53 @@ class Phone2 implements Runnable {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+}
+
+/**
+ * done 28: java锁之自旋锁理论知识
+ * 自旋锁（spinlock）:是指尝试获取锁的线程不会立即阻塞，
+ * 而是采用循环的方式去尝试获取锁，这样的好处是减少线程上下文切换的消耗，缺点是循环会消耗CPU
+ * CAS自旋锁:while(compareAndSwapInt(var1,var2,var5,var+var4))就是循环尝试
+ * done 29:自旋锁代码验证
+ * 好处：循环获取没有阻塞
+ */
+class SpinLockDemo {
+
+    AtomicReference<Thread> reference = new AtomicReference<>();
+
+    public void myLock() {
+        Thread thread = Thread.currentThread();
+        System.out.println(thread.getName() + "\t come in 😄");
+        while (!reference.compareAndSet(null, thread)) {
+        }
+    }
+
+    public void unLock() {
+        Thread thread = Thread.currentThread();
+        reference.compareAndSet(thread, null);
+        System.out.println(thread.getName() + "\t go out (_　_)。゜zｚＺ");
+    }
+
+    public static void main(String[] args) {
+        SpinLockDemo spinLockDemo = new SpinLockDemo();
+        new Thread(() -> {
+            spinLockDemo.myLock();
+            try {
+                TimeUnit.SECONDS.sleep(5);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            spinLockDemo.unLock();
+        }, "AA").start();
+        try {
+            TimeUnit.SECONDS.sleep(1);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        new Thread(() -> {
+            spinLockDemo.myLock();
+            spinLockDemo.unLock();
+        }, "BB").start();
     }
 }
