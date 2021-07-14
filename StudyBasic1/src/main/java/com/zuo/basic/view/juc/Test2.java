@@ -1,10 +1,7 @@
 package com.zuo.basic.view.juc;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -309,11 +306,11 @@ class SpinLockDemo {
 }
 
 /**
- * todo 第30课：读写锁理论知识
+ * done 第30课：读写锁理论知识
  * 独占锁：指该锁被一个线程持有，对ReetranLock和Synchronized而言都是独占锁
  * 共享锁：可被多个线程持有
  * 对ReentrantReadWriteLock其读锁是共享锁，其写锁是独占锁
- * todo 31课：读写锁小demo验证
+ * done 31课：读写锁小demo验证
  * 为什么要用读写锁：
  */
 class ReadWriteDemo {
@@ -412,3 +409,88 @@ class MyCache2 {//使用读写锁
         }
     }
 }
+
+/**
+ * done 第32课：CountDownLatch讲解
+ * 案例一
+ */
+class CountDownLatchDemo {
+    public static void main(String[] args) throws InterruptedException {
+        CountDownLatch countDownLatch = new CountDownLatch(6);
+        for (int i = 1; i <= 6; i++) {
+            int n = i;
+            new Thread(() -> {
+                System.out.println("第" + n + "位同学离开");
+                countDownLatch.countDown();
+            }, String.valueOf(i)).start();
+        }
+        countDownLatch.await();
+        System.out.println("班长锁门O(∩_∩)O");
+    }
+}
+
+/**
+ * 案例二
+ */
+class CountDownLatchDemo2 {
+    public static void main(String[] args) throws InterruptedException {
+        CountDownLatch countDownLatch = new CountDownLatch(6);
+        for (int i = 1; i <= 6; i++) {
+            int n = i;
+            new Thread(() -> {
+                System.out.println(Thread.currentThread().getName() + "国被灭");
+                countDownLatch.countDown();
+            }, CountryEnum.foreachCounty(i).getRetMessage()).start();
+        }
+        countDownLatch.await();
+        System.out.println("秦国一统华夏");
+        System.out.println();
+        System.out.println(CountryEnum.ONE);
+        System.out.println(CountryEnum.ONE.getRetCode());
+        System.out.println(CountryEnum.ONE.getRetMessage());
+    }
+}
+
+enum CountryEnum {
+    ONE(1, "齐"),
+    TWO(2, "楚"),
+    THREE(3, "燕"),
+    FOUR(4, "赵"),
+    FIVE(5, "魏"),
+    SIX(6, "韩");
+
+    private Integer retCode;
+    private String retMessage;
+
+    public Integer getRetCode() {
+        return retCode;
+    }
+
+    public void setRetCode(Integer retCode) {
+        this.retCode = retCode;
+    }
+
+    public String getRetMessage() {
+        return retMessage;
+    }
+
+    public void setRetMessage(String retMessage) {
+        this.retMessage = retMessage;
+    }
+
+    CountryEnum(Integer retCode, String retMessage) {
+        this.retCode = retCode;
+        this.retMessage = retMessage;
+    }
+
+    public static CountryEnum foreachCounty(Integer index) {
+        CountryEnum[] values = CountryEnum.values();
+        for (CountryEnum country : values) {
+            if (index.equals(country.retCode)) {
+                return country;
+            }
+        }
+        return null;
+    }
+}
+
