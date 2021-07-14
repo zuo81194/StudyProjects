@@ -8,6 +8,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * done 第20课 集合不安全
@@ -304,5 +305,110 @@ class SpinLockDemo {
             spinLockDemo.myLock();
             spinLockDemo.unLock();
         }, "BB").start();
+    }
+}
+
+/**
+ * todo 第30课：读写锁理论知识
+ * 独占锁：指该锁被一个线程持有，对ReetranLock和Synchronized而言都是独占锁
+ * 共享锁：可被多个线程持有
+ * 对ReentrantReadWriteLock其读锁是共享锁，其写锁是独占锁
+ * todo 31课：读写锁小demo验证
+ * 为什么要用读写锁：
+ */
+class ReadWriteDemo {
+    public static void main(String[] args) {
+        //不加锁小栗子
+//        MyCache1 myCache1 = new MyCache1();
+//        for (int i = 1; i <= 5; i++) {
+//            String tmp = String.valueOf(i);
+//            new Thread(() -> {
+//                myCache1.put(tmp, tmp);
+//            }, tmp).start();
+//        }
+//        for (int i = 1; i <= 5; i++) {
+//            String tmp = String.valueOf(i);
+//            new Thread(() -> {
+//                myCache1.get(tmp);
+//            }, tmp).start();
+//        }
+        //加锁小例子
+        MyCache2 myCache2 = new MyCache2();
+        for (int i = 1; i <= 5; i++) {
+            String tmp = String.valueOf(i);
+            new Thread(() -> {
+                myCache2.put(tmp, tmp);
+            }, tmp).start();
+        }
+        for (int i = 1; i <= 5; i++) {
+            String tmp = String.valueOf(i);
+            new Thread(() -> {
+                myCache2.get(tmp);
+            }, tmp).start();
+        }
+    }
+}
+
+class MyCache1 {//不加锁
+    private Map map = new HashMap<String, String>();
+
+    public void put(String key, String value) {
+        System.out.println(Thread.currentThread().getName() + "\t 正在写入：" + value);
+        //模拟网络延迟
+        try {
+            TimeUnit.MICROSECONDS.sleep(300);
+            map.put(key, value);
+            System.out.println(Thread.currentThread().getName() + "\t 写入完成");
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void get(String key) {
+        System.out.println(Thread.currentThread().getName() + "\t 正在读取");
+        //模拟网络延迟
+        try {
+            TimeUnit.MICROSECONDS.sleep(300);
+            Object value = map.get(key);
+            System.out.println(Thread.currentThread().getName() + "\t 读取完成：" + value);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+}
+
+class MyCache2 {//使用读写锁
+    private Map map = new HashMap<String, String>();
+    ReentrantReadWriteLock rwLock = new ReentrantReadWriteLock();
+
+    public void put(String key, String value) {
+        rwLock.writeLock().lock();
+        //模拟网络延迟
+        try {
+            System.out.println(Thread.currentThread().getName() + "\t 正在写入：" + value);
+            TimeUnit.MICROSECONDS.sleep(300);
+            map.put(key, value);
+            System.out.println(Thread.currentThread().getName() + "\t 写入完成");
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } finally {
+            rwLock.writeLock().unlock();
+        }
+    }
+
+    public void get(String key) {
+        rwLock.readLock().lock();
+        //模拟网络延迟
+        try {
+            System.out.println(Thread.currentThread().getName() + "\t 正在读取");
+            TimeUnit.MICROSECONDS.sleep(300);
+            Object value = map.get(key);
+            System.out.println(Thread.currentThread().getName() + "\t 读取完成：" + value);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } finally {
+            rwLock.readLock().unlock();
+        }
     }
 }
