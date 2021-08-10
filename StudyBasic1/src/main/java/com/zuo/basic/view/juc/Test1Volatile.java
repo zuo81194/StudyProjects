@@ -47,7 +47,7 @@ class Test2Volatile {
 
     /**
      * 1   验证volatile的可见性
-     * 1.1  加入int number = 0; number 变量之前并没有添加volatile关键字修饰
+     * 1.1  加入int number = 0; number 变量之前并没有添加volatile关键字修饰，这次加上volatile修饰，会通知其他线程
      */
     public static void main(String[] args) {
         MyData2 myData = new MyData2();
