@@ -546,7 +546,7 @@ class SemaphoreDemo {
 
 
 /**
- * todo 35~36课：阻塞队列理论
+ * todo 35~39课：阻塞队列理论
  * <p>
  * ArrayBlockingQueue: 是一个基于数组结构的有界阻塞队列，此队列按FIFO(先进先出)原则对元素进行排序
  * LinkedBlockingQueue: 一个是基于链表结构的阻塞队列，此队列按FIFO(先进先出)排序元素,吞吐量通常要高于ArrayBlockingQueue
@@ -558,9 +558,54 @@ class SemaphoreDemo {
  * 2.1 阻塞队列有没有好的一面
  * <p>
  * 2.2 不得不阻塞，你如何管理
+ * 方法类型     抛出异常        特殊值         阻塞      超时
+ * 插入         add(3)        offer(e)     put(e)     offer(e,time,unit)
+ * 移除         remove()      poll()      take()      poll(time,unit)
+ * 检查         element()     peek()      不可用         不可用
  */
 class BlockingQueueDemo {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
         List<String> li = new ArrayList<>();
+        //1.抛异常
+        BlockingQueue<String> queue1 = new ArrayBlockingQueue<>(3);
+        System.out.println(queue1.add("a"));
+        System.out.println(queue1.add("b"));
+        System.out.println(queue1.add("c"));
+//        System.out.println(queue1.add("x"));//IllegalStateException:Queue full
+        System.out.println(queue1.remove());
+        System.out.println(queue1.remove());
+        System.out.println(queue1.remove());
+//        System.out.println(queue1.element());//NoSuchElementException
+//        System.out.println(queue1.remove());//NoSuchElementException
+        System.out.println("-------------------------------------------");
+        //2.特殊值
+        System.out.println(queue1.offer("a1"));
+        System.out.println(queue1.offer("b1"));
+        System.out.println(queue1.offer("c1"));
+//        System.out.println(queue1.offer("c1"));//false
+        System.out.println(queue1.poll());
+        System.out.println(queue1.poll());
+        System.out.println(queue1.poll());
+//        System.out.println(queue1.poll());//null
+//        System.out.println(queue1.peek());//null
+        System.out.println("-------------------------------------------");
+        //3.阻塞
+        queue1.put("a2");
+        queue1.put("b2");
+        queue1.put("c2");
+//        queue1.put("d2");//阻塞
+        queue1.take();
+        queue1.take();
+        queue1.take();
+//        queue1.take();//阻塞
+        //4.超时不候
+        System.out.println(queue1.offer("a3", 2, TimeUnit.SECONDS));
+        System.out.println(queue1.offer("b3", 2, TimeUnit.SECONDS));
+        System.out.println(queue1.offer("c3", 2, TimeUnit.SECONDS));
+//        System.out.println(queue1.offer("d3", 2, TimeUnit.SECONDS));//阻塞指定时长后释放,这里返回false
+        System.out.println(queue1.poll(2,TimeUnit.SECONDS));
+        System.out.println(queue1.poll(2,TimeUnit.SECONDS));
+        System.out.println(queue1.poll(2,TimeUnit.SECONDS));
+//        System.out.println(queue1.poll(2,TimeUnit.SECONDS));//阻塞指定时长后释放,这里返回null
     }
 }
