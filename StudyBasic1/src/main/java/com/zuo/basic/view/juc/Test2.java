@@ -3,6 +3,7 @@ package com.zuo.basic.view.juc;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -546,7 +547,7 @@ class SemaphoreDemo {
 
 
 /**
- * todo 35~39课：阻塞队列理论
+ * todo 35~40课：阻塞队列理论
  * <p>
  * ArrayBlockingQueue: 是一个基于数组结构的有界阻塞队列，此队列按FIFO(先进先出)原则对元素进行排序
  * LinkedBlockingQueue: 一个是基于链表结构的阻塞队列，此队列按FIFO(先进先出)排序元素,吞吐量通常要高于ArrayBlockingQueue
@@ -603,9 +604,126 @@ class BlockingQueueDemo {
         System.out.println(queue1.offer("b3", 2, TimeUnit.SECONDS));
         System.out.println(queue1.offer("c3", 2, TimeUnit.SECONDS));
 //        System.out.println(queue1.offer("d3", 2, TimeUnit.SECONDS));//阻塞指定时长后释放,这里返回false
-        System.out.println(queue1.poll(2,TimeUnit.SECONDS));
-        System.out.println(queue1.poll(2,TimeUnit.SECONDS));
-        System.out.println(queue1.poll(2,TimeUnit.SECONDS));
+        System.out.println(queue1.poll(2, TimeUnit.SECONDS));
+        System.out.println(queue1.poll(2, TimeUnit.SECONDS));
+        System.out.println(queue1.poll(2, TimeUnit.SECONDS));
 //        System.out.println(queue1.poll(2,TimeUnit.SECONDS));//阻塞指定时长后释放,这里返回null
     }
 }
+
+/**
+ * 没有容量，只能生产一个消费一个才能继续生产
+ */
+class SynchronousQueueDemo {
+    public static void main(String[] args) {
+        BlockingQueue<String> queue = new SynchronousQueue<>();
+        new Thread(() -> {
+            try {
+                System.out.println(Thread.currentThread().getName() + " put 1");
+                queue.put("1");
+                System.out.println(Thread.currentThread().getName() + " put 2");
+                queue.put("2");
+                System.out.println(Thread.currentThread().getName() + " put 3");
+                queue.put("3");
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }, "AAA").start();
+        new Thread(() -> {
+            try {
+                TimeUnit.SECONDS.sleep(5);
+                System.out.println(Thread.currentThread().getName() + " take " + queue.take());
+                TimeUnit.SECONDS.sleep(5);
+                System.out.println(Thread.currentThread().getName() + " take " + queue.take());
+                TimeUnit.SECONDS.sleep(5);
+                System.out.println(Thread.currentThread().getName() + " take " + queue.take());
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }, "BBB").start();
+    }
+}
+
+/**
+ * done 第41: 传统版生产者消费者
+ * 情景: 一个空调，一个同学加一度，一个同学减一度，两人交替5轮
+ */
+class ShareData {
+    private int number;
+    private Lock lock = new ReentrantLock();
+    private Condition condition = lock.newCondition();
+
+    public void increment() throws Exception {
+        lock.lock();
+        try {
+            while (number != 0) {//不能用if，防止虚假通知
+                condition.await();
+            }
+            number++;
+            System.out.println(Thread.currentThread().getName() + ": " + number);
+            condition.signalAll();
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public void decrement() throws Exception {
+        lock.lock();
+        try {
+            while (number == 0) {//不能用if，防止虚假通知
+                condition.await();
+            }
+            number--;
+            System.out.println(Thread.currentThread().getName() + ": " + number);
+            condition.signalAll();
+        } finally {
+            lock.unlock();
+        }
+    }
+}
+
+class ProdConsumer_TraditionDemo {
+    public static void main(String[] args) {
+        ShareData shareData = new ShareData();
+        new Thread(() -> {
+            for (int i = 1; i <= 5; i++) {
+                try {
+                    shareData.increment();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }, "AAA").start();
+        new Thread(() -> {
+            for (int i = 1; i <= 5; i++) {
+                try {
+                    shareData.decrement();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }, "BBB").start();
+        new Thread(() -> {
+            for (int i = 1; i <= 5; i++) {
+                try {
+                    shareData.increment();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }, "CCC").start();
+        new Thread(() -> {
+            for (int i = 1; i <= 5; i++) {
+                try {
+                    shareData.decrement();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }, "DDD").start();
+    }
+}
+
+/**
+ * todo 第42： Synchronized和Lock有什么区别
+ */
