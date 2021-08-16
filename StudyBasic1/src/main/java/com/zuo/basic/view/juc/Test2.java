@@ -725,5 +725,35 @@ class ProdConsumer_TraditionDemo {
 }
 
 /**
- * todo 第42： Synchronized和Lock有什么区别
+ * todo 第42： Synchronized和Lock有什么区别，用Lock有什么好处
+ *      1.原始构成：
+ *          Synchronized属于JVM层面，是Java的一个关键字，底层是通过monitor对象来完成的
+ *          而Lock是API层面，他是Java的一个类
+ *      2.使用方法
+ *          Synchronized 不需要用户去手动释放，当Synchronized代码执行完后系统会自动释放对锁的占用
+ *          ReetrantLock 则需要用户去手动释放锁若没有主动释放锁，就有可能导致出现死锁现象
+ *      3.等待是否可中断
+ *          Synchronized 不可中断，除非抛出异常或者正常运行完成
+ *          ReetrantLock 可中断，1.设置超时方法tryLock(long timeout,TimeUnit unit)
+ *                              2.lockInterruptibly()放代码块中，调用interrupt()方法可中断
+ *       4.加锁是否公平
+ *          Synchronized 非公平锁
+ *          ReetrantLock 默认非公平锁，也可以设置为公平锁
+ *       5.锁要绑定多个条件Condition
+ *          Synchronized 没有
+ *          ReentrantLock 用来实现分组唤醒的线程们，可以精确唤醒，而不是像Synchronized要么随机唤醒一线程，要么唤醒全部线程
  */
+
+/**
+ * 题目：多线程之间按顺序调用，实现A->B->C三个线程启动，要求如下
+ * AA打印5次，BB打印10次，CC打印15次
+ * ......
+ * 来10轮
+ */
+class SyncAndReentrantLockDemo{
+    public static void main(String[] args) {
+        synchronized (new Object()){
+
+        }
+    }
+}
