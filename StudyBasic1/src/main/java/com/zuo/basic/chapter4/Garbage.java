@@ -29,7 +29,7 @@ public class Garbage {
         }
         System.out.println("bye!");
         if (args[0].equals("after")) {
-            System.runFinalizersOnExit(true);
+            //System.runFinalizersOnExit(true);
         }
         int[][] a1 = {
                 { 1, 2, 3, },

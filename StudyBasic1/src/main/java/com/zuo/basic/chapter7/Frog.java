@@ -118,7 +118,7 @@ public class Frog extends Amphibian {
             System.out.println("bye!");
             // Must do this to guarantee that all
             // finalizers will be called:
-            System.runFinalizersOnExit(true);
+            //System.runFinalizersOnExit(true);
         }
     }
 
